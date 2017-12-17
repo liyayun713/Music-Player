@@ -1,2 +1,11 @@
 # Music-Player
-Vue进阶项目
+### 技能点
+* 轮播图
+* JSONP---跨域
+* Promise
+* Better-Scroll
+* axios
+* 后端接口代理
+* flex布局
+* scroll组件
+* vue-lazyload
