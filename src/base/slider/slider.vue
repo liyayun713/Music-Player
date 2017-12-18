@@ -46,13 +46,58 @@
       }, 20);
 
       // 监听视口改变事件
+//      window.addEventListener('resize', () => {
+//        if (!this.slider) return;
+//        this._setSliderWidth(true);
+//        this.slider.refresh();
+//      });
       window.addEventListener('resize', () => {
-        if (!this.slider) return;
-        this._setSliderWidth(true);
-        this.slider.refresh();
+        if (!this.slider || !this.slider.enabled) {
+          return;
+        }
+        clearTimeout(this.resizeTimer);
+        this.resizeTimer = setTimeout(() => {
+          if (this.slider.isInTransition) {
+            this._onScrollEnd();
+          } else {
+            if (this.autoPlay) {
+              this._play();
+            }
+          }
+          this.refresh();
+        }, 60);
       });
     },
+    activated () {
+      this.slider.enable()
+      let pageIndex = this.slider.getCurrentPage().pageX
+      if (pageIndex > this.dots.length) {
+        pageIndex = pageIndex % this.dots.length
+      }
+      this.slider.goToPage(pageIndex, 0, 0)
+      if (this.loop) {
+        pageIndex -= 1
+      }
+      this.currentPageIndex = pageIndex
+      if (this.autoPlay) {
+        this._play()
+      }
+    },
+    deactivated () {
+      this.slider.disable()
+      clearTimeout(this.timer)
+    },
+    beforeDestroy () {
+      this.slider.disable()
+      clearTimeout(this.timer)
+    },
     methods: {
+      refresh () {
+        if (this.slider) {
+          this._setSliderWidth(true)
+          this.slider.refresh()
+        }
+      },
       // 横向滚动需要设置一个slider的宽度
       _setSliderWidth (isResize) {
         this.children = this.$refs.sliderGroup.children;
@@ -86,34 +131,27 @@
         });
 
         // 监听事件，获取当前index
-        this.slider.on('scrollEnd', () => {
-          // 获取当前index
-          let pageIndex = this.slider.getCurrentPage().pageX;
-          // if (this.loop) pageIndex -= 1;
-          this.currentPageIndex = pageIndex;
-          if (this.loop) {
-            clearTimeout(this.timer);
-            this._play();
-          }
-        });
+        this.slider.on('scrollEnd', this._onScrollEnd);
+      },
+      _onScrollEnd () {
+        // 获取当前index
+        let pageIndex = this.slider.getCurrentPage().pageX;
+        if (this.loop) pageIndex -= 1;
+        this.currentPageIndex = pageIndex;
+        if (this.autoPlay) this._play();
       },
       _initDots () {
         // dots就是长度为歌单长度的空数组
         this.dots = new Array(this.children.length);
       },
       _play () {
-        // let pageIndex = this.currentPageIndex + 1;
-        // if (this.loop) pageIndex += 1;
+        let pageIndex = this.slider.getCurrentPage().pageX + 1;
+        clearTimeout(this.timer);
         this.timer = setTimeout(() => {
           // goToPage方法进行切换，不能从最后一张图片再跳到第一张，所以使用next()
-          // this.slider.goToPage(pageIndex, 0, 400);
-          this.slider.next();
+          this.slider.goToPage(pageIndex, 0, 400);
         }, this.interval);
       }
-    },
-    destroyed () {
-      // 组件销毁的时候清除计时器
-      clearTimeout(this.timer);
     }
   };
 </script>

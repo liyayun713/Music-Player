@@ -1,22 +1,24 @@
 <template>
-  <div class="recommend">
-    <scroll class="recommend-content" :data="discList">
+  <div class="recommend" ref="recommend">
+    <scroll ref="scroll" class="recommend-content" :data="discList">
       <div>
         <div v-if="recommends.length" class="slider-wrapper">
-          <slider>
-            <div v-for="item in recommends">
-              <a :href="item.linkUrl">
-                <img :src="item.picUrl">
-              </a>
-            </div>
-          </slider>
+          <div class="slider-content">
+            <slider ref="slider">
+              <div v-for="item in recommends">
+                <a :href="item.linkUrl">
+                  <img @load="loadImage" :src="item.picUrl">
+                </a>
+              </div>
+            </slider>
+          </div>
         </div>
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
             <li v-for="item in discList" class="list-item">
               <div class="icon">
-                <img width="60" height="60" :src="item.imgurl">
+                <img width="60" height="60" v-lazy="item.imgurl">
               </div>
               <div class="text">
                 <h2 class="name">{{item.creator.name}}</h2>
@@ -25,6 +27,9 @@
             </li>
           </ul>
         </div>
+      </div>
+      <div class="loading-container" v-show="!discList.length">
+        <loading></loading>
       </div>
     </scroll>
   </div>
@@ -35,21 +40,31 @@
   import { ERR_OK } from '@/api/config'
   import Slider from '@/base/slider/slider'
   import Scroll from '@/base/scroll/scroll'
+  import Loading from '@/base/loading/loading'
 
   export default {
     data () {
       return {
         recommends: [],
-        discList: []
+        discList: [],
+        checkLoaded: false
       };
     },
     components: {
       Slider,
-      Scroll
+      Scroll,
+      Loading
     },
     created () {
       this._getRecommend();
       this._getDiscList();
+    },
+    activated () {
+      // keep-alive组件激活时调用
+      // 该钩子在服务器端渲染期间不被调用
+      setTimeout(() => {
+        this.$refs.slider && this.$refs.slider.refresh()
+      }, 20)
     },
     methods: {
       _getRecommend () {
@@ -69,6 +84,13 @@
         }, err => {
           console.log(err);
         });
+      },
+      loadImage () {
+        if (this.checkLoaded) return;
+        this.checkLoaded = true;
+        setTimeout(() => {
+          this.$refs.scroll.refresh()
+        }, 20)
       }
     }
   }
@@ -88,7 +110,15 @@
       .slider-wrapper
         position relative
         width 100%
+        height 0
+        padding-top 40%
         overflow hidden
+        .slider-content
+          position: absolute
+          top: 0
+          left: 0
+          width: 100%
+          height: 100%
       .recommend-list
         .list-title
           height 65px
@@ -98,7 +128,7 @@
           color $color-theme
         .list-item
           display flex
-          align-items center            // 交叉轴上对其方式
+          align-items center // 交叉轴上对其方式
           box-sizing border-box
           padding 0 20px 20px
           .icon
@@ -109,7 +139,7 @@
             flex 1
             display flex
             flex-direction column
-            justify-content center      // 主轴上的对齐方式
+            justify-content center // 主轴上的对齐方式
             line-height 20px
             overflow hidden
             font-size $font-size-medium
@@ -118,4 +148,9 @@
               color $color-text
             .desc
               color $color-text-d
+      .loading-container
+        position absolute
+        top 50%
+        width 100%
+        transform translateY(-50%)
 </style>
