@@ -9,7 +9,7 @@
       <li v-for="group in data" class="list-group" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
         <ul>
-          <li v-for="item in group.items" class="list-group-item">
+          <li v-for="item in group.items" class="list-group-item" @click="selectItem(item)">
             <img v-lazy="item.avatar" class="avatar"/>
             <span class="name">{{item.name}}</span>
           </li>
@@ -83,6 +83,10 @@
       this.probeType = 3;
     },
     methods: {
+      selectItem (item) {
+        // 基础组件不会有任何业务逻辑相关的，所以派发出去
+        this.$emit('select', item);
+      },
       onShortcutTouchStart (e) {
         // 当前索引
         let anchorIndex = getData(e.target, 'index');

@@ -1,6 +1,8 @@
 <template>
   <div class="singer" ref="singer">
-    <listview :data="singers"></listview>
+    <listview :data="singers" @select="selectSinger"></listview>
+    <!--增加 router-view，承载子路由-->
+    <router-view></router-view>
   </div>
 </template>
 
@@ -9,6 +11,8 @@
   import { ERR_OK } from '@/api/config';
   import Singer from '@/common/js/singer'
   import Listview from '@/base/listview/listview'
+  import { mapMutations } from 'vuex';
+
   const HOT_NAME = '热门';
   const HOT_SINGER_LEN = 10;
 
@@ -25,6 +29,13 @@
       this._getSingerList();
     },
     methods: {
+      selectSinger (singer) {
+        this.$router.push({
+          path: `/singer/${singer.id}`
+        });
+        // 实现对一个数据的提交，简写
+        this.setSinger(singer)
+      },
       _getSingerList () {
         getSingerList().then(res => {
           if (res.code === ERR_OK) {
@@ -46,7 +57,8 @@
           if (index < HOT_SINGER_LEN) {
             map.hot.items.push(new Singer({
               id: item.Fsinger_mid,
-              name: item.Fsinger_name}));
+              name: item.Fsinger_name
+            }));
           }
 
           const key = item.Findex;
@@ -79,7 +91,10 @@
         });
 
         return hot.concat(ret);
-      }
+      },
+      ...mapMutations({
+        setSinger: 'SET_SINGER'
+      })
     }
   };
 </script>
