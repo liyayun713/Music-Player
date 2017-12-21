@@ -9,3 +9,5 @@
 * flex布局
 * scroll组件
 * vue-lazyload
+* better-scroll 和 fastclick 冲突问题
+* loading组件
