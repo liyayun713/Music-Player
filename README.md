@@ -11,3 +11,11 @@
 * vue-lazyload
 * better-scroll 和 fastclick 冲突问题
 * loading组件
+* autoPreFix
+* 路由子组件
+* 路由动画
+* vuex
+* touchstart 和 touchmove
+* line-height: 1
+* event.target 和 event.currentTarget
+* setAttribute 和 getAttribute
