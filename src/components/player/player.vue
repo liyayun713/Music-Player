@@ -27,9 +27,11 @@
         </div>
         <div class="bottom">
           <div class="progress-wrapper">
-            <span class="time time-l"></span>
-            <div class="progress-bar-wrapper"></div>
-            <span class="time time-r"></span>
+            <span class="time time-l">{{format(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
+            </div>
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
             <div class="icon i-left">
@@ -61,7 +63,9 @@
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
-          <i @click.stop.prevent="togglePlaying" :class="minIcon"></i>
+          <progress-circle :radius="radius" :percent="percent">
+            <i @click.stop.prevent="togglePlaying" class="icon-min" :class="minIcon"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
@@ -71,7 +75,8 @@
     <audio ref="audio"
            :src="currentSong.url"
            @canplay="ready"
-           @error="error"></audio>
+           @error="error"
+           @timeupdate="updateTime"></audio>
   </div>
 </template>
 
@@ -79,13 +84,21 @@
   import { mapGetters, mapMutations } from 'vuex';
   import { prefixStyle } from '@/common/js/dom';
   import animations from 'create-keyframe-animation';
+  import ProgressBar from '@/base/progress-bar/progress-bar';
+  import ProgressCircle from '@/base/progress-circle/progress-circle';
 
   const transform = prefixStyle('transform');
 
   export default {
+    components: {
+      ProgressBar,
+      ProgressCircle
+    },
     data () {
       return {
-        songReady: false
+        songReady: false,
+        currentTime: 0,
+        radius: 32
       };
     },
     computed: {
@@ -101,6 +114,9 @@
       disableCls () {
         return this.songReady ? '' : 'disable';
       },
+      percent () {
+        return this.currentTime / this.currentSong.duration;
+      },
       ...mapGetters([
         'fullScreen',
         'playList',
@@ -110,6 +126,30 @@
       ])
     },
     methods: {
+      onProgressBarChange (percent) {
+        // 改变 audio 的currentTime
+        this.$refs.audio.currentTime = this.currentSong.duration * percent;
+        if (!this.playing) this.togglePlaying();
+      },
+      updateTime (e) {
+        // 将 audio 的 timeupdate 事件回调的 e.target.currentTime 赋值给 currentTime
+        this.currentTime = e.target.currentTime;
+      },
+      format (interval) {
+        // 向下取整
+        interval = interval | 0;
+        const minute = interval / 60 | 0;
+        const second = interval % 60 | 0;
+        return `${minute}:${this._pad(second)}`;
+      },
+      _pad (num, n = 2) {
+        let len = num.toString().length;
+        while (len < n) {
+          num = '0' + num;
+          len++;
+        }
+        return num;
+      },
       next () {
         if (!this.songReady) return;
         let index = this.currentIndex + 1;
