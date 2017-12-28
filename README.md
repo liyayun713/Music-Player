@@ -19,3 +19,7 @@
 * line-height: 1
 * event.target 和 event.currentTarget
 * setAttribute 和 getAttribute
+* SVG图
+* audio 标签
+* create-keyframe-animation动画库
+
