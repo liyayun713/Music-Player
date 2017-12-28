@@ -34,8 +34,8 @@
             <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class="disableCls">
               <i @click="prev" class="icon-prev"></i>
@@ -76,13 +76,16 @@
            :src="currentSong.url"
            @canplay="ready"
            @error="error"
-           @timeupdate="updateTime"></audio>
+           @timeupdate="updateTime"
+           @ended="end"></audio>
   </div>
 </template>
 
 <script>
   import { mapGetters, mapMutations } from 'vuex';
   import { prefixStyle } from '@/common/js/dom';
+  import { playMode } from '@/common/js/config';
+  import { randomListFn } from '@/common/js/util';
   import animations from 'create-keyframe-animation';
   import ProgressBar from '@/base/progress-bar/progress-bar';
   import ProgressCircle from '@/base/progress-circle/progress-circle';
@@ -102,6 +105,9 @@
       };
     },
     computed: {
+      iconMode () {
+        return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random';
+      },
       cdCls () {
         return this.playing ? 'play' : 'play pause';
       },
@@ -122,10 +128,34 @@
         'playList',
         'currentSong',
         'playing',
-        'currentIndex'
+        'currentIndex',
+        'mode',
+        'sequenceList'
       ])
     },
     methods: {
+      changeMode () {
+        // 改变模式
+        // const mode = (this.mode + 1) % 3;
+        const mode = this.mode === playMode.sequence ? playMode.loop : this.mode === playMode.loop ? playMode.random : playMode.sequence;
+        this.setMode(mode);
+        // 修改当前播放列表 playList
+        let list = null;
+        if (mode === playMode.random) {
+          list = randomListFn(this.sequenceList);
+        } else {
+          list = this.sequenceList;
+        }
+        // 重置 currentSong 的 currentIndex
+        this.resetCurrentIndex(list);
+        this.setPlayList(list);
+      },
+      resetCurrentIndex (list) {
+        let index = list.findIndex((item) => {
+          return this.currentSong.mid === item.mid;
+        });
+        this.setCurrentIndex = index;
+      },
       onProgressBarChange (percent) {
         // 改变 audio 的currentTime
         this.$refs.audio.currentTime = this.currentSong.duration * percent;
@@ -149,6 +179,19 @@
           len++;
         }
         return num;
+      },
+      end () {
+        // 如果是单曲循环模式，进行循环
+        if (this.mode === playMode.loop) {
+          this.loop();
+        } else {
+          this.next();
+        }
+      },
+      loop () {
+        // 单曲循环把播放时间置为0
+        this.$refs.audio.currentTime = 0;
+        this.$refs.audio.play();
       },
       next () {
         if (!this.songReady) return;
@@ -254,11 +297,14 @@
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
         setPlayingState: 'SET_PLAYING_STATE',
-        setCurrentIndex: 'SET_CUREENT_INDEX'
+        setCurrentIndex: 'SET_CUREENT_INDEX',
+        setMode: 'SET_MODE',
+        setPlayList: 'SET_PLAY_LIST'
       })
     },
     watch: {
-      currentSong () {
+      currentSong (newVal, oldVal) {
+        if (newVal.id === oldVal.id) return;
         // 调用 play() 的时候去请求src，所以使用 this.$nextTick()
         this.$nextTick(() => {
           this.$refs.audio.play();

@@ -32,8 +32,14 @@
     },
     methods: {
       progressClick (e) {
+        // 当我们点击 progress-btn 的时候，e.offsetX获取不对，使用 pageX
+        const rect = this.$refs.progressBar.getBoundingClientRect();
+        const left = rect.left;
+        const pageX = e.pageX;
+        const delta = pageX - left;
+        this._offset(delta);
         // 直接获取偏移量
-        this._offset(e.offsetX);
+        // this._offset(e.offsetX);
         // 通知外层
         this._triggerPercent();
       },
