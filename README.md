@@ -23,3 +23,5 @@
 * audio 标签
 * create-keyframe-animation动画库
 * referer 校验
+* base64 转码
+* Vue-mixin
