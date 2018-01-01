@@ -13,3 +13,17 @@ export function randomListFn (list) {
   }
   return _list;
 }
+
+// 节流函数，类似于函数柯里化
+export function debounce (func, delay) {
+  let timer
+
+  return function (...args) {
+    if (timer) {
+      clearTimeout(timer)
+    }
+    timer = setTimeout(() => {
+      func.apply(this, args)
+    }, delay)
+  }
+}

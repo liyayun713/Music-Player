@@ -22,7 +22,7 @@
             class="list"
             ref="list">
       <div class="song-list-wrapper">
-        <song-list @select="selectItem" :songs="songs"></song-list>
+        <song-list @select="selectItem" :songs="songs" :rank="rank"></song-list>
       </div>
       <div v-show="!songs.length" class="loading-container">
         <loading></loading>
@@ -37,12 +37,15 @@
   import SongList from '@/base/song-list/song-list';
   import Loading from '@/base/loading/loading';
   import { prefixStyle } from '@/common/js/dom';
+  import { playListMixin } from '@/common/js/mixin';
 
   const transform = prefixStyle('transform');
   const backdrop = prefixStyle('backdrop-filter');
   const RESERVED_HEIGHT = 40;
 
   export default {
+    // 一旦组件中插入 mixin，则把 mixin 中的方法插入到组件中，组件中同名的方法把 mixin 中的方法覆盖
+    mixins: [playListMixin],
     components: {
       Scroll,
       SongList,
@@ -60,6 +63,10 @@
       title: {
         type: String,
         default: ''
+      },
+      rank: {
+        type: Boolean,
+        default: false
       }
     },
     data () {
@@ -69,7 +76,7 @@
     },
     computed: {
       bgStyle () {
-        return `background: url(${this.bgImage})`;
+        return `background-image: url(${this.bgImage})`;
       }
     },
     created () {
@@ -84,6 +91,11 @@
       this.$refs.list.$el.style.top = this.$refs.bgImage.clientHeight + 'px';
     },
     methods: {
+      handlePlayList (playList) {
+        const bottom = playList.length > 0 ? '60px' : '';
+        this.$refs.list.$el.style.bottom = bottom;
+        this.$refs.list.refresh();
+      },
       random () {
         this.randomPlay({
           list: this.songs
@@ -190,7 +202,7 @@
       height 0                      // 四个属性进行宽高比10：7的占位
       padding-top 70%               // 四个属性进行宽高比10：7的占位
       transform-origin top          // transform-Origin属性允许您更改转换元素的位置；从顶部开始变换
-      background-size cover         // 此时会保持图像的纵横比并将图像缩放成将完全覆盖背景定位区域的*最小大小*
+      background-size cover // 此时会保持图像的纵横比并将图像缩放成将完全覆盖背景定位区域的*最小大小*
       .play-wrapper
         position absolute
         bottom 20px

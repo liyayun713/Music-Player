@@ -25,6 +25,7 @@ module.exports = {
     'no-debugger': process.env.NODE_ENV === 'production' ? 2 : 0,
     // 新文件末尾空行
     'eol-last': 0,
-    'semi': 0
+    'semi': 0,
+    'prefer-promise-reject-errors': 0
   }
 }

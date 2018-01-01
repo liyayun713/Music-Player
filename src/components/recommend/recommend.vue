@@ -16,7 +16,7 @@
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
-            <li v-for="item in discList" class="list-item">
+            <li @click="selectItem(item)" v-for="item in discList" class="list-item">
               <div class="icon">
                 <img width="60" height="60" v-lazy="item.imgurl">
               </div>
@@ -32,17 +32,21 @@
         <loading></loading>
       </div>
     </scroll>
+    <router-view></router-view>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+  import { mapMutations } from 'vuex';
   import { getRecommend, getDiscList } from '@/api/recommend'
   import { ERR_OK } from '@/api/config'
   import Slider from '@/base/slider/slider'
   import Scroll from '@/base/scroll/scroll'
   import Loading from '@/base/loading/loading'
+  import { playListMixin } from '@/common/js/mixin'
 
   export default {
+    mixins: [playListMixin],
     data () {
       return {
         recommends: [],
@@ -67,6 +71,17 @@
       }, 20)
     },
     methods: {
+      selectItem (item) {
+        this.$router.push({
+          path: `/recommend/${item.dissid}`
+        });
+        this.setDisc(item);
+      },
+      handlePlayList (playList) {
+        const bottom = playList.length > 0 ? '60px' : '';
+        this.$refs.recommend.style.bottom = bottom;
+        this.$refs.scroll.refresh();
+      },
       _getRecommend () {
         getRecommend().then(res => {
           if (res.code === ERR_OK) {
@@ -91,7 +106,10 @@
         setTimeout(() => {
           this.$refs.scroll.refresh()
         }, 20)
-      }
+      },
+      ...mapMutations({
+        setDisc: 'SET_DISC'
+      })
     }
   }
 </script>
@@ -104,6 +122,7 @@
     top 88px
     width 100%
     bottom 0
+    overflow hidden
     .recommend-content
       height 100%
       overflow hidden
