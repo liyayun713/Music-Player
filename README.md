@@ -22,4 +22,10 @@
 * SVG图
 * audio 标签
 * create-keyframe-animation动画库
-
+* referer 校验
+* base64 转码
+* Vue-mixin
+* background-size: cover
+* 节流函数 debounce
+* 函数柯里化 => 实现节流函数
+* 移动端滚动时，键盘收起
