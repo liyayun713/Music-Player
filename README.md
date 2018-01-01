@@ -25,3 +25,4 @@
 * referer 校验
 * base64 转码
 * Vue-mixin
+* background-size: cover
