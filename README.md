@@ -26,3 +26,5 @@
 * base64 转码
 * Vue-mixin
 * background-size: cover
+* 节流函数 debounce
+* 函数柯里化 => 实现节流函数
