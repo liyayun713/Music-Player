@@ -28,3 +28,4 @@
 * background-size: cover
 * 节流函数 debounce
 * 函数柯里化 => 实现节流函数
+* 移动端滚动时，键盘收起
