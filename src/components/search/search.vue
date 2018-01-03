@@ -8,7 +8,7 @@
         <div class="hot-key">
           <h1 class="title">热门搜索</h1>
           <ul>
-            <li @click="addQuery(hotkey, index)" class="item" v-for="(hotkey, index) in hotkeyList">
+            <li @click="addQuery(hotkey.k, index)" class="item" v-for="(hotkey, index) in hotKey">
               <span>{{hotkey.k}}</span>
             </li>
           </ul>
@@ -16,11 +16,13 @@
         <div class="search-history" v-show="searchHistory.length">
           <h1 class="title">
             <span class="text">搜索历史</span>
-            <span class="clear">
+            <span class="clear" @click="clearSearchHistory">
               <i class="icon-clear"></i>
             </span>
           </h1>
-          <search-list @select="" :searches="searchHistory"></search-list>
+          <search-list @select="addQuery"
+                       @delete="deleteSearchHistory"
+                       :searches="searchHistory"></search-list>
         </div>
       </div>
     </div>
@@ -47,7 +49,7 @@
     },
     data () {
       return {
-        hotkeyList: [],
+        hotKey: [],
         query: ''
       };
     },
@@ -69,26 +71,27 @@
       onQueryChange (query) {
         this.query = query;
       },
-      addQuery (hotkey, index) {
-        if (index === 0) {
-          location.href = hotkey.special_url;
-        } else {
-          this.$refs.searchBox.setQuery(hotkey.k);
-        }
+      addQuery (query) {
+        this.$refs.searchBox.setQuery(query);
       },
+//      可省略
+//      deleteOne (item) {
+//        this.deleteSearchHistory(item);
+//      },
+//      deleteAll () {
+//        this.clearSearchHistory();
+//      },
       _getHotkey () {
         getHotkey().then(res => {
           if (res.code === ERR_OK) {
-            this.hotkeyList.push({
-              k: res.data.special_key,
-              special_url: res.data.special_url
-            });
-            this.hotkeyList = this.hotkeyList.concat(res.data.hotkey.slice(0, 9));
+            this.hotKey = res.data.hotkey.slice(0, 10);
           }
         });
       },
       ...mapActions([
-        'saveSearchHistory'
+        'saveSearchHistory',
+        'deleteSearchHistory',
+        'clearSearchHistory'
       ])
     },
     watch: {
@@ -132,10 +135,6 @@
             background $color-highlight-background
             font-size $font-size-medium
             color $color-text-d
-            &:first-child
-              color $color-theme
-              border 1px solid
-              border-color $color-theme
         .search-history
           position relative
           margin 0 20px

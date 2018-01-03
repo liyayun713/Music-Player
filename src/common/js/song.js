@@ -1,6 +1,9 @@
-import { getLyric } from '@/api/song'
+import { getLyric, getVKey } from '@/api/song'
+import { getUid } from './uid'
 import { ERR_OK } from '@/api/config'
 import { Base64 } from 'js-base64'
+
+let urlMap = {}
 
 export default class Song {
   constructor ({id, mid, singer, name, album, duration, image, url}) {
@@ -11,7 +14,13 @@ export default class Song {
     this.album = album          // 专辑
     this.duration = duration    // 时长
     this.image = image
-    this.url = url
+    this.filename = `C400${this.mid}.m4a`
+    // 确保一首歌曲的 id 只对应一个 url
+    if (urlMap[this.id]) {
+      this.url = urlMap[this.id]
+    } else {
+      this._genUrl()
+    }
   }
 
   getLyric () {
@@ -28,6 +37,19 @@ export default class Song {
           reject('no lyric')
         }
       })
+    })
+  }
+
+  _genUrl () {
+    if (this.url) {
+      return
+    }
+    getVKey(this.mid, this.filename).then((res) => {
+      if (res.code === ERR_OK) {
+        const vkey = res.data.items[0].vkey
+        this.url = `http://dl.stream.qqmusic.qq.com/${this.filename}?vkey=${vkey}&guid=${getUid()}&uin=0&fromtag=66`
+        urlMap[this.id] = this.url
+      }
     })
   }
 }
