@@ -33,3 +33,4 @@
 * scroll组件内部第一层只能有一个div
 * search组件在迷你播放器的高度自适应
 * 添加@click.stop阻止冒泡
+* 列表动画transition-group（name tag :key）
