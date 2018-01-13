@@ -34,3 +34,7 @@
 * search组件在迷你播放器的高度自适应
 * 添加@click.stop阻止冒泡
 * 列表动画transition-group（name tag :key）
+* 编译打包
+* node服务测试
+* 性能优化
+* 路由懒加载
