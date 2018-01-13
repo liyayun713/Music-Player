@@ -48,3 +48,4 @@ const Recommend = resolve => {
   })
 }
 ```
+* 配 CDN 域名 --- publicPath
