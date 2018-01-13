@@ -37,6 +37,7 @@
 * 编译打包
 1. node_modules --> vendor
 2. prod.server.js
+3. manifest --> 静态资源的清单
 * node服务测试
 * 性能优化
 * 路由懒加载
