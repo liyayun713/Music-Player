@@ -35,6 +35,8 @@
 * 添加@click.stop阻止冒泡
 * 列表动画transition-group（name tag :key）
 * 编译打包
+1. node_modules --> vendor
+2. prod.server.js
 * node服务测试
 * 性能优化
 * 路由懒加载
