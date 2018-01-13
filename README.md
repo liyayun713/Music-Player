@@ -40,4 +40,11 @@
 3. manifest --> 静态资源的清单
 * node服务测试
 * 性能优化
-* 路由懒加载
+* 路由懒加载 --- 异步按需加载
+```js
+const Recommend = resolve => {
+  import('@/components/recommend/recommend').then(recommend => {
+    resolve(recommend)
+  })
+}
+```
