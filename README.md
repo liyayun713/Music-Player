@@ -50,3 +50,5 @@ const Recommend = resolve => {
 ```
 * 配 CDN 域名 --- publicPath
 * 移动端常用工具
+1. vConsole 调试
+2. Charles 抓包（windows系统 -> fiddler）https需要配置证书才可抓包
