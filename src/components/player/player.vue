@@ -67,7 +67,7 @@
               <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon icon-not-favorite"></i>
+              <i class="icon" @click="toggleFavorite(currentSong)" :class="favoriteIcon"></i>
             </div>
           </div>
         </div>
@@ -95,7 +95,7 @@
     <playlist ref="playlist"></playlist>
     <audio ref="audio"
            :src="currentSong.url"
-           @canplay="ready"
+           @play="ready"
            @error="error"
            @timeupdate="updateTime"
            @ended="end"></audio>
@@ -103,21 +103,22 @@
 </template>
 
 <script>
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapGetters, mapMutations, mapActions } from 'vuex';
   import { prefixStyle } from '@/common/js/dom';
   import { playMode } from '@/common/js/config';
-  import { randomListFn } from '@/common/js/util';
   import animations from 'create-keyframe-animation';
   import ProgressBar from '@/base/progress-bar/progress-bar';
   import ProgressCircle from '@/base/progress-circle/progress-circle';
   import Lyric from 'lyric-parser';
   import Scroll from '@/base/scroll/scroll';
   import Playlist from '@/components/playlist/playlist';
+  import { playerMixin } from '@/common/js/mixin';
 
   const transform = prefixStyle('transform');
   const transitionDuration = prefixStyle('transitionDuration');
 
   export default {
+    mixins: [playerMixin],
     components: {
       ProgressBar,
       ProgressCircle,
@@ -136,9 +137,6 @@
       };
     },
     computed: {
-      iconMode () {
-        return this.mode === playMode.sequence ? 'icon-sequence' : this.mode === playMode.loop ? 'icon-loop' : 'icon-random';
-      },
       cdCls () {
         return this.playing ? 'play' : 'play pause';
       },
@@ -156,12 +154,8 @@
       },
       ...mapGetters([
         'fullScreen',
-        'playList',
-        'currentSong',
         'playing',
-        'currentIndex',
-        'mode',
-        'sequenceList'
+        'currentIndex'
       ])
     },
     created () {
@@ -222,28 +216,7 @@
         this.$refs.middleL.style.opacity = opacity;
         this.$refs.middleL.style[transitionDuration] = `${time}ms`;
       },
-      changeMode () {
-        // 改变模式
-        // const mode = (this.mode + 1) % 3;
-        const mode = this.mode === playMode.sequence ? playMode.loop : this.mode === playMode.loop ? playMode.random : playMode.sequence;
-        this.setMode(mode);
-        // 修改当前播放列表 playList
-        let list = null;
-        if (mode === playMode.random) {
-          list = randomListFn(this.sequenceList);
-        } else {
-          list = this.sequenceList;
-        }
-        // 重置 currentSong 的 currentIndex
-        this.resetCurrentIndex(list);
-        this.setPlayList(list);
-      },
-      resetCurrentIndex (list) {
-        let index = list.findIndex((item) => {
-          return this.currentSong.mid === item.mid;
-        });
-        this.setCurrentIndex = index;
-      },
+
       onProgressBarChange (percent) {
         const currentTime = this.currentSong.duration * percent;
         // 改变 audio 的currentTime
@@ -288,6 +261,7 @@
         if (!this.songReady) return;
         if (this.playing.length === 1) {
           this.loop();
+          return;
         } else {
           let index = this.currentIndex + 1;
           if (index === this.playList.length) {
@@ -303,6 +277,7 @@
         if (!this.songReady) return;
         if (this.playing.length === 1) {
           this.loop();
+          return;
         } else {
           let index = this.currentIndex - 1;
           if (index === -1) {
@@ -322,6 +297,7 @@
       },
       ready () {
         this.songReady = true;
+        this.savePlayHistory(this.currentSong);
       },
       error () {
         this.songReady = true;
@@ -395,6 +371,7 @@
       },
       getLyric () {
         this.currentSong.getLyric().then(lyric => {
+          if (this.currentSong.lyric !== lyric) return;
           this.currentLyric = new Lyric(lyric, this.handleLyric);
           if (this.playing) this.currentLyric.play();
         }).catch(() => {
@@ -417,19 +394,20 @@
       },
       // 映射
       ...mapMutations({
-        setFullScreen: 'SET_FULL_SCREEN',
-        setPlayingState: 'SET_PLAYING_STATE',
-        setCurrentIndex: 'SET_CUREENT_INDEX',
-        setMode: 'SET_MODE',
-        setPlayList: 'SET_PLAY_LIST'
-      })
+        setFullScreen: 'SET_FULL_SCREEN'
+      }),
+      ...mapActions([
+        'savePlayHistory'
+      ])
     },
     watch: {
       currentSong (newVal, oldVal) {
+        if (!newVal.id) return;
         if (newVal.id === oldVal.id) return;
         if (this.currentLyric) this.currentLyric.stop();
         // 调用 play() 的时候去请求src，所以使用 this.$nextTick()
-        setTimeout(() => {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => {
           this.$refs.audio.play();
           this.getLyric();
         }, 1000);
@@ -624,7 +602,7 @@
       &.normal-enter-active, &.normal-leave-active
         transition all 0.4s
         .top, .bottom
-          // 贝塞尔曲线，回弹效果
+        // 贝塞尔曲线，回弹效果
           transition all 0.4s cubic-bezier(0.86, 0.18, 0.82, 1.32)
       &.normal-enter, &.normal-leave-to
         opacity 0
@@ -675,7 +653,7 @@
       .control
         flex 0 0 30px
         width 30px
-        padding  0 10px
+        padding 0 10px
         .icon-play-mini, .icon-pause-mini, .icon-playlist
           font-size 30px
           color $color-theme-d

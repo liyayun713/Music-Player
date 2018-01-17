@@ -4,27 +4,27 @@
       <div class="list-wrapper" @click.stop>
         <div class="list-header">
           <h1 class="title">
-            <i class="icon"></i>
-            <span class="text"></span>
-            <span class="clear"><i class="icon-clear"></i></span>
+            <i class="icon" :class="iconMode" @click="changeMode"></i>
+            <span class="text">{{modeText}}</span>
+            <span class="clear" @click="showConfirm"><i class="icon-clear"></i></span>
           </h1>
         </div>
-        <scroll ref="listContent" class="list-content" :data="sequenceList">
-          <ul>
-            <li class="item" v-for="(item, index) in sequenceList" @click="selectItem(item, index)">
+        <scroll ref="listContent" :refreshDelay="refreshDelay" class="list-content" :data="sequenceList">
+          <transition-group name="list" tag="ul">
+            <li :key="item.id" ref="listItem" class="item" v-for="(item, index) in sequenceList" @click="selectItem(item, index)">
               <i class="current" :class="getCurrentIcon(item)"></i>
               <span class="text">{{item.name}}</span>
-              <span class="like">
-              <i class="icon-not-favorite"></i>
-            </span>
-              <span class="delete">
-              <i class="icon-delete"></i>
-            </span>
+              <span class="like" @click.stop="toggleFavorite(item)">
+                <i :class="getFavoriteIcon(item)"></i>
+              </span>
+              <span class="delete" @click.stop="deleteOne(item)">
+                <i class="icon-delete"></i>
+              </span>
             </li>
-          </ul>
+          </transition-group>
         </scroll>
         <div class="list-operate">
-          <div class="add">
+          <div class="add" @click="addSong">
             <i class="icon-add"></i>
             <span class="text">添加歌曲到列表</span>
           </div>
@@ -33,36 +33,69 @@
           <span>关闭</span>
         </div>
       </div>
+      <confirm ref="confirm"
+               @confirm="confirmClear"
+               title="是否清空播放列表"
+               confirmBtnText="清空"></confirm>
+      <add-song ref="addSong"></add-song>
     </div>
   </transition>
 </template>
 
 <script>
-  import { mapGetters, mapMutations } from 'vuex';
+  import { mapActions } from 'vuex';
   import Scroll from '@/base/scroll/scroll';
   import { playMode } from '@/common/js/config';
+  import Confirm from '@/base/confirm/confirm';
+  import { playerMixin } from '@/common/js/mixin';
+  import AddSong from '@/components/add-song/add-song';
 
   export default {
+    mixins: [playerMixin],
     components: {
-      Scroll
+      Scroll,
+      Confirm,
+      AddSong
     },
     data () {
       return {
-        showFlag: false
+        showFlag: false,
+        refreshDelay: 120
       };
     },
     computed: {
-      ...mapGetters([
-        'sequenceList',
-        'currentSong',
-        'playList'
-      ])
+      modeText () {
+        return this.mode === playMode.sequence ? '顺序播放' : this.mode === playMode.loop ? '单曲循环' : '随机播放';
+      }
     },
     methods: {
+      addSong () {
+        this.$refs.addSong.show();
+      },
+      confirmClear () {
+        this.deleteSongList();
+        this.hide();
+      },
+      showConfirm () {
+        this.$refs.confirm.show();
+      },
+      deleteOne (item) {
+        this.deleteSong(item);
+        if (!this.playList.length) {
+          this.hide();
+        }
+      },
+      scrollToCurrent (current) {
+        const index = this.sequenceList.findIndex((song) => {
+          return current.id === song.id;
+        });
+        this.$refs.listContent.scrollToElement(this.$refs.listItem[index], 300);
+      },
       show () {
         this.showFlag = true;
         this.$nextTick(() => {
           this.$refs.listContent.refresh();
+          this.scrollToCurrent(this.currentSong);
         });
       },
       hide () {
@@ -82,10 +115,20 @@
           });
         }
         this.setCurrentIndex(index);
+        this.setPlayingState(true);
       },
-      ...mapMutations({
-        setCurrentIndex: 'SET_CUREENT_INDEX'
-      })
+      ...mapActions([
+        'deleteSong',
+        'deleteSongList'
+      ])
+    },
+    watch: {
+      currentSong (newSong, oldSong) {
+        if (!this.showFlag || newSong.id === oldSong.id) {
+          return;
+        }
+        this.scrollToCurrent(newSong);
+      }
     }
   };
 </script>
@@ -146,7 +189,7 @@
           padding 0 30px 0 20px
           overflow hidden
           &.list-enter-active, &.list-leave-active
-            transition all 0.1s
+            transition all 0.1s linear
           &.list-enter, &.list-leave-to
             height 0
           .current

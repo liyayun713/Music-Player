@@ -8,6 +8,11 @@ import fastclick from 'fastclick'
 
 import 'common/stylus/index.styl'
 
+/* eslint-disable no-unused-vars */
+import vConsole from 'vconsole'
+
+console.log('test')
+
 Vue.use(VueLazyload, {
   // preLoad: 1.3,
   // error: 'dist/error.png',
