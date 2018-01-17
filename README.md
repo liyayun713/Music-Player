@@ -32,3 +32,23 @@
 * 基础组件不做任何业务逻辑处理，直接向外派发事件即可，外部监听
 * scroll组件内部第一层只能有一个div
 * search组件在迷你播放器的高度自适应
+* 添加@click.stop阻止冒泡
+* 列表动画transition-group（name tag :key）
+* 编译打包
+1. node_modules --> vendor
+2. prod.server.js
+3. manifest --> 静态资源的清单
+* node服务测试
+* 性能优化
+* 路由懒加载 --- 异步按需加载（减少首屏加载资源）
+```js
+const Recommend = resolve => {
+  import('@/components/recommend/recommend').then(recommend => {
+    resolve(recommend)
+  })
+}
+```
+* 配 CDN 域名 --- publicPath
+* 移动端常用工具
+1. vConsole 调试
+2. Charles 抓包（windows系统 -> fiddler）https需要配置证书才可抓包
